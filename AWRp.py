@@ -48,13 +48,14 @@ from io import StringIO
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+# Global variables        
+TableSize = 10
 NoneType = type(None)
 
 def getData(content, filter):    
     '''
         Find AWR Table Section using the filter
     '''
-
     table = content.find('table', {'summary': filter})       
     # Testing if it didn´t find awr section
     if not isinstance(table, NoneType):    
@@ -64,14 +65,22 @@ def getData(content, filter):
         ret[0].rename(columns = {'Unnamed: 0': 'Info'}, inplace=True)
         return ret
 
-
 def printTable(sectionIndex, sectionInfo, soup, fmt):  
     '''
         Print the pandas dataframe in the format defined
     '''
-    print("\nSECTION {}: {}\n".format(sectionIndex, sectionInfo))
-    # printTable(getData(soup, info),args.fmt)
     data = getData(soup, sectionInfo)
+    print("\nSECTION {}: {}\n".format(sectionIndex, sectionInfo))
+
+    # for i in data:
+    print('----')
+    print(data)
+    print('xxxx')
+
+    return 
+
+    df = data[0]
+
     if not isinstance(data, NoneType):
         match fmt:
             case 'csv':
@@ -150,10 +159,11 @@ def printTable(sectionIndex, sectionInfo, soup, fmt):
                         print(data[0])
 
                         topSQL = []
-                        for i in range(10):
+                        for i in range(TableSize):
                             topSQL.append(data[0].iloc[i])
                             # topSQL[i] = data[0].iloc[i + 1]
                         print(topSQL)
+
 
                 # sales_sheet = workbook['section' + str(sectionIndex)]
                 # with pd.ExcelWriter('pandas_to_excel.xlsx') as writer:                    
@@ -162,7 +172,12 @@ def printTable(sectionIndex, sectionInfo, soup, fmt):
                     # data[0].to_excel(writer, sheet_name='new_sheet2')
 
             case _:
-                print(tabulate(data[0], headers='keys', tablefmt=fmt, showindex=False) )
+                print(tabulate(data[0].iloc[0:TableSize], headers='keys', tablefmt=fmt, showindex=False))
+
+                # Create an empty row with empty string values                
+                #
+                # empty_row = pd.DataFrame([empty_values], columns=df.columns)
+
     else:
         print('Data not found')
 
@@ -216,7 +231,8 @@ def main():
                     'This table displays top SQL by amount of shared memory used', 
                     'This table displays top SQL by version counts', 
                     'This table displays top SQL by cluster wait time', 
-                    'This table displays Foreground Wait Events and their wait statistics'
+                    'This table displays Foreground Wait Events and their wait statistics',
+                    'This table displays top 10 wait events by total wait time'
                     ]
         
         if args.listsections:
@@ -243,20 +259,12 @@ def main():
                         for i, info in enumerate(infolist):                        
                             if len(sections) == 0 or str(i) in sections:
                                 printTable(i, info, soup, args.fmt)
-                        if args.fmt == 'excel':
-                            print ("Excel summary")
-                            # Host name: 
-
-                        # if args.fmt  'excel':
-                        #     print "Excel summary"
-
 
                     finally:
                         f.close()
     
     finally:    
         print("\nAWRp.py Finished\n")
-        
 
 if __name__ == '__main__':
     main()
