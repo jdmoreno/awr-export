@@ -4,3 +4,4 @@ python AWR2Excel.py -files .\test\in\test2\*.html
 
 this is a test
 esta es una prueba
+esta es otra prueba
