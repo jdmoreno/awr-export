@@ -195,6 +195,7 @@ def extract_awr_data(section_index, soup, report):
             case 21:
                 key_list = []
                 value_list = []
+                # print(f"instance efficiency percentages - df - {df}")
                 populate_kv_lists(df.columns, key_list, value_list, 0)
                 populate_kv_lists(df.columns, key_list, value_list, 2)
 
@@ -213,10 +214,11 @@ def extract_awr_data(section_index, soup, report):
 
             case _:
                 print("Section {} not expected".format(section_index))
-    # else:
-    #     # section_key = f'section_{section_index}'
-    #     # section_key = section_index
-    #     report[awr_sections[section_index]] = pd.DataFrame(index=range(0, table_size), columns=range(0, 1))
+    else:
+        # section_key = f'section_{section_index}'
+        # section_key = section_index
+        # This is to create an empty section if the section is missing from the AWr file, i.e. where there is no SQL versions
+        report[awr_sections[section_index]] = pd.DataFrame(index=range(0, table_size), columns=range(0, 1))
 
 def perform_sanity_checks(report:dict):
     check_results = {}
@@ -245,7 +247,7 @@ def perform_sanity_checks(report:dict):
     evidences_list = []
     # print(check_results)
     for key, value in check_results.items():
-        print(f"{key} - {value}")
+        # print(f"{key} - {value}")
         checks_list.append(key)
         results_list.append(value["result"])
         evidences_list.append(value["evidence"])
@@ -253,30 +255,45 @@ def perform_sanity_checks(report:dict):
 
 
 def populate_kv_lists(df, key_list, value_list, index):
-    key_list.append(df[index].replace(":", "").replace("%", "").strip())
-    value_list.append(float(df[index + 1]))
+    # print(f"Key {df[index]} - type {df[index]}")
+    # print(f"Value {df[index+1]} - type {df[index+1]}")
+    key = df[index].replace(":", "").replace("%", "").strip()
+    if type(df[index+1]) is float:
+        value = df[index+1]
+    else:
+        value = float(df[index + 1][0:6])
+    # print(f"Key {key} - Value {value}")
+    key_list.append(key)
+    value_list.append(value)
 
 
 def sql_ordered_by_version_count(dataframe, check_results):
-    # SQL Id version count - Total < 200
     # SQL Id version count - Individual < 100
-    versions = dataframe["Version Count"]
-    sql_text = dataframe["SQL Text"]
+    # SQL Id version count - Total < 200
 
-    limit_version_one = 100
+    limit_version_one = 50
     limit_version_all = 200
 
     version_one_flag = False
     version_all_flag = False
 
+    version_one_statement = ""
+    version_one_statement = ""
     version_all = 0
-    for index, version in versions.items():
-        # Check if not a number
-        if version == version:
-            version_all = version_all + version
-            if not version_one_flag and version >= limit_version_one:
-                version_one_statement = sql_text[index]
-                version_one_flag = True
+
+    # print(f"dataframe \n{dataframe} \n keys {dataframe.keys()} \n {dataframe.columns()}")    
+
+    if "Version Count" in dataframe.columns:
+        versions = dataframe["Version Count"]
+        sql_text = dataframe["SQL Text"]
+
+        for index, version in versions.items():
+            # Check if not a number
+            if version == version:
+                version_all = version_all + version
+                if not version_one_flag and version >= limit_version_one:
+                    version_one_statement = sql_text[index]
+                    version_one_flag = True
 
     if version_all >= limit_version_all:
         version_all_flag = True
