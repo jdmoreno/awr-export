@@ -219,29 +219,37 @@ def extract_awr_data(section_index, soup, report):
     #     report[awr_sections[section_index]] = pd.DataFrame(index=range(0, table_size), columns=range(0, 1))
 
 def perform_sanity_checks(report:dict):
-    check_list = []
-    result_list = []
-    evidence_list = []
+    check_results = {}
 
     for section_index, dataframe  in report.items():
         match section_index:
             case 'This table displays top SQL by version counts':
-                sql_ordered_by_version_count(dataframe, check_list, result_list, evidence_list)
+                sql_ordered_by_version_count(dataframe, check_results)
 
             case 'This table displays top 10 wait events by total wait time':
-                top_10_foreground_events_by_total_wait_time(dataframe)
+                top_10_foreground_events_by_total_wait_time(dataframe, check_results)
 
             case 'This table displays instance efficiency percentages':
-                instance_efficiency_percentages(dataframe)
+                instance_efficiency_percentages(dataframe, check_results)
 
             case 'This table displays top SQL by number of executions':
-                sql_ordered_by_executions(dataframe)
+                sql_ordered_by_executions(dataframe, check_results)
 
             case 'This table displays load profile':
-                load_profile(dataframe)
+                load_profile(dataframe, check_results)
 
             case 'This table displays wait class statistics ordered by total wait time':
-                wait_classes_by_total_wait_time(dataframe)
+                wait_classes_by_total_wait_time(dataframe, check_results)
+    checks_list = []
+    results_list = []
+    evidences_list = []
+    # print(check_results)
+    for key, value in check_results.items():
+        print(f"{key} - {value}")
+        checks_list.append(key)
+        results_list.append(value["result"])
+        evidences_list.append(value["evidence"])
+    report[checks_section_key] = pd.DataFrame(data={"Check": checks_list, "Result": results_list, "Evidence": evidences_list})
 
 
 def populate_kv_lists(df, key_list, value_list, index):
@@ -249,7 +257,7 @@ def populate_kv_lists(df, key_list, value_list, index):
     value_list.append(float(df[index + 1]))
 
 
-def sql_ordered_by_version_count(dataframe, check_list, result_list, evidence_list):
+def sql_ordered_by_version_count(dataframe, check_results):
     # SQL Id version count - Total < 200
     # SQL Id version count - Individual < 100
     versions = dataframe["Version Count"]
@@ -273,11 +281,16 @@ def sql_ordered_by_version_count(dataframe, check_list, result_list, evidence_li
     if version_all >= limit_version_all:
         version_all_flag = True
 
-    print(f"Version one flag: {version_one_flag} - SQL statement: {version_one_statement}")
-    print(f"Version all: {version_all} - Version all flag: {version_all_flag}")
+    # Print check results
+    # print(f"version_one_flag: {version_one_flag} - evidence: {version_one_flag}")
+    # print(f"version_one_flag: {version_all_flag} - evidence: {version_all}")
+
+    # Update checklist
+    check_results['version_one_flag'] = {'result':version_one_flag, 'evidence':version_one_statement}
+    check_results['version_all_flag'] = {'result': version_all_flag, 'evidence': version_all}
 
 
-def top_10_foreground_events_by_total_wait_time(dataframe):
+def top_10_foreground_events_by_total_wait_time(dataframe, check_results):
     limit_event_waits = 0
 
     # Use first column as index
@@ -285,19 +298,33 @@ def top_10_foreground_events_by_total_wait_time(dataframe):
 
     # Obtain the items
     library_cache_lock_event_waits = at("library cache lock", "Waits", temp_df)
-    library_cache_mutex_x_event_waits = at("library cache: mutex X", "Waits", temp_df)
-    cursor_mutex_s_event_waits = at("cursor: mutex S", "Waits", temp_df)
-    cursor_mutex_x_event_waits = at("cursor: mutex X", "Waits", temp_df)
-    cursor_pin_s_wait_on_x_event_waits = at("cursor: pin S wait on X", "Waits", temp_df)
-    print("{} - {} - {} - {} - {}".format(library_cache_lock_event_waits, library_cache_mutex_x_event_waits, cursor_mutex_s_event_waits, cursor_mutex_x_event_waits, cursor_pin_s_wait_on_x_event_waits))
-
     library_cache_locks_event_waits_flag = library_cache_lock_event_waits > limit_event_waits
+
+    library_cache_mutex_x_event_waits = at("library cache: mutex X", "Waits", temp_df)
     library_cache_mutex_x_event_waits_flag = library_cache_mutex_x_event_waits > limit_event_waits
+
+    cursor_mutex_s_event_waits = at("cursor: mutex S", "Waits", temp_df)
     cursor_mutex_s_event_waits_flag = cursor_mutex_s_event_waits > limit_event_waits
+
+    cursor_mutex_x_event_waits = at("cursor: mutex X", "Waits", temp_df)
     cursor_mutex_x_event_waits_flag = cursor_mutex_x_event_waits > limit_event_waits
+
+    cursor_pin_s_wait_on_x_event_waits = at("cursor: pin S wait on X", "Waits", temp_df)
     cursor_pin_s_wait_on_x_event_waits_flag = cursor_pin_s_wait_on_x_event_waits > limit_event_waits
-    print("{} - {} - {} - {} - {}".format(library_cache_locks_event_waits_flag, library_cache_mutex_x_event_waits_flag, cursor_mutex_s_event_waits_flag,
-                                          cursor_mutex_x_event_waits_flag, cursor_pin_s_wait_on_x_event_waits_flag))
+
+    # Print check results
+    # print(f"library_cache_locks_event_waits_flag: {library_cache_locks_event_waits_flag} - evidence: {library_cache_lock_event_waits}")
+    # print(f"library_cache_mutex_x_event_waits_flag: {library_cache_mutex_x_event_waits_flag} - evidence: {library_cache_mutex_x_event_waits}")
+    # print(f"cursor_mutex_s_event_waits_flag: {cursor_mutex_s_event_waits_flag} - evidence: {cursor_mutex_s_event_waits}")
+    # print(f"cursor_mutex_x_event_waits_flag: {cursor_mutex_x_event_waits_flag} - evidence: {cursor_mutex_x_event_waits}")
+    # print(f"cursor_pin_s_wait_on_x_event_waits_flag: {cursor_pin_s_wait_on_x_event_waits_flag} - evidence: {cursor_pin_s_wait_on_x_event_waits}")
+
+    # Update checklist
+    check_results['library_cache_lock_event_waits'] = {'result':library_cache_locks_event_waits_flag, 'evidence':library_cache_lock_event_waits}
+    check_results['library_cache_mutex_x_event_waits'] = {'result':library_cache_mutex_x_event_waits_flag, 'evidence':library_cache_mutex_x_event_waits}
+    check_results['cursor_mutex_s_event_waits'] = {'result': cursor_mutex_s_event_waits_flag, 'evidence': cursor_mutex_s_event_waits}
+    check_results['cursor_mutex_x_event_waits'] = {'result': cursor_mutex_x_event_waits_flag, 'evidence': cursor_mutex_x_event_waits}
+    check_results['cursor_pin_s_wait_on_x_event_waits'] = {'result': cursor_pin_s_wait_on_x_event_waits_flag, 'evidence': cursor_pin_s_wait_on_x_event_waits}
 
 def at(index: str, column: str, dataframe: pd.DataFrame) -> object:
     try:
@@ -307,30 +334,40 @@ def at(index: str, column: str, dataframe: pd.DataFrame) -> object:
     return item
 
 
-def sql_ordered_by_executions(dataframe):
-    print('sql_ordered_by_executions')
+def sql_ordered_by_executions(dataframe, check_results):
+    # print('sql_ordered_by_executions')
     # print(dataframe)
+    return
 
 
-def instance_efficiency_percentages(dataframe):
+def instance_efficiency_percentages(dataframe, check_results):
     limit_execute_to_parse = 90
     temp_df = dataframe.set_index("Parameter", inplace=False)
     execute_to_parse = at("Execute to Parse", "Value", temp_df)
     execute_to_parse_flag =  not (execute_to_parse > limit_execute_to_parse)
-    print(f"{execute_to_parse} - {execute_to_parse_flag}")
+
+    # Print check results
+    # print(f"execute_to_parse_flag: {execute_to_parse_flag} - evidence: {execute_to_parse}")
+
+    # Update checklist
+    check_results['execute_to_parse_flag'] = {'result':execute_to_parse_flag, 'evidence':execute_to_parse}
 
 
-def load_profile(dataframe):
-    print('load_profile')
+def load_profile(dataframe, check_results):
+    # print('load_profile')
     # print(dataframe)
+    return
 
-def wait_classes_by_total_wait_time(dataframe):
+def wait_classes_by_total_wait_time(dataframe, check_results):
     limit_concurrency_db_time = 5
     # Use first column as index
     temp_df = dataframe.set_index("Wait Class", inplace=False)
     concurreency_db_time = at("Concurrency", "% DB time", temp_df)
     concurreency_db_time_flag = concurreency_db_time > limit_concurrency_db_time
-    print("{} - {}".format(concurreency_db_time, concurreency_db_time_flag))
+
+    # Print check results
+    # print(f"concurreency_db_time_flag: {concurreency_db_time_flag} - evidence: {concurreency_db_time}")
+
 
 def extract_sql_table(section_index, report, df):
     section_df = df.iloc[0:table_size]
