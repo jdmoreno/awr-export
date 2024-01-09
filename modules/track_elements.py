@@ -18,3 +18,11 @@ def get_tracked_sql_ids() -> dict:
 
 def get_tracked_sql_modules() -> dict:
     return tracked_sql_modules
+
+
+def clear_tracked_sql_ids():
+    tracked_sql_ids.clear()
+
+
+def clear_tracked_sql_modules():
+    tracked_sql_modules.clear()

@@ -10,7 +10,9 @@ from openpyxl.formatting.rule import FormulaRule
 
 titles_row = 6
 summary_range = "!$A$4:$B$23"
-ad_checks_range = "!$A$236:$C$245"
+ad_checks_range = "!$A$262:$C$271"
+tracked_sql_id_range = "!$A$236:$B$245"
+
 
 ns_yyyy_mm_dd_h_mm_ss = NamedStyle(name="datetime", number_format="yyyy-mm-dd h:mm:ss")
 ns_h_mm_ss = NamedStyle(name="time", number_format="h:mm:ss")
@@ -116,7 +118,12 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
         ad_checks_range,
         ad_checks_range,
         ad_checks_range,
-        ad_checks_range
+
+        tracked_sql_id_range,
+        tracked_sql_id_range,
+        tracked_sql_id_range,
+        tracked_sql_id_range,
+        tracked_sql_id_range
     ]
 
     titles = [
@@ -139,7 +146,12 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
         "cursor_pin_s_wait_on_x_event_waits",
         "execute_to_parse",
         "concurrency_db_time",
-        "ratio_exceptions_events"
+
+        "42578a4znzq41",
+        "7wcmwtk6ay1c9",
+        "adxgsarcwdbdr",
+        "cvq3d9nzdp5w7",
+        "47byg9a0mdfmx"
     ]
 
     # Print ranges
@@ -163,7 +175,10 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
             if i < 10:
                 lookup_col = 2
             else:
-                lookup_col = 3
+                if i < 19:
+                    lookup_col = 3
+                else:
+                    lookup_col = 2
 
             column_letter = get_column_letter(column)
             match column_letter:
@@ -184,14 +199,18 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
                 case "H":
                     work_sheet.cell(row=row, column=column,
                                     value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
-                    work_sheet.cell(row=row, column=column).style = ns_h_mm_ss
+                    work_sheet.cell(row=row, column=column).number_format = "0.00"
 
                 case "J":
                     work_sheet.cell(row=row, column=column, value=f"=$I{row}/$H{row}")
                     work_sheet.cell(row=row, column=column).number_format = "0.00"
 
-                case "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "V":
+                case "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S":
                     work_sheet.cell(row=row, column=column, value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
+                    work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
+
+                case "V" | "W" | "X" | "Y" | "Z":
+                    work_sheet.cell(row=row, column=column, value=f"=_xlfn.IFNA(VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE), 0)")
                     work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
 
                 case _:
@@ -239,7 +258,6 @@ def print_reports(reports: dict):
 
             for row in dataframe_to_rows(section_df, index=False, header=True):
                 ws.append(row)
-                # write a file object along with .xlsx extension
 
     # create checks sheet
     create_sheet_checks(wb, sheets)
@@ -248,6 +266,7 @@ def print_reports(reports: dict):
     create_sheet_summary(wb, sheets)
 
     # convert datetime obj to string
+    # write a file object along with .xlsx extension
     str_current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
     out_filename = str_current_datetime + "_AWR2Excel" + ".xlsx"
     wb.save(out_filename)

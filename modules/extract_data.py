@@ -21,6 +21,7 @@ import pandas as pd
 
 import modules.track_elements as track_elements
 
+
 def get_section(soup, section_filter):
     """
         Find AWR Table Section using the filter
@@ -129,7 +130,7 @@ def process_section(section_index, soup, report):
                 df_summary.loc[len(df_summary)] = {'Parameter': 'busyCPU', 'Value': busy_cpu}
 
             case 9 | 10 | 11 | 12 | 13 | 14:
-                # SQL tables. Move SQLId, User and SQL statement to left colunm for easier comparison
+                # SQL tables. Move SQLId, User and SQL statement to left column for easier comparison
                 report[awr_sections[section_index]] = extract_sql_table_with_tracking(df)
 
             case 15:
@@ -177,41 +178,6 @@ def process_section(section_index, soup, report):
         report[awr_sections[section_index]] = pd.DataFrame(index=range(0, table_size), columns=range(0, 1))
 
 
-def extract_sql_table(df):
-    """
-    Extract information from a table with information about SQL statements
-    Move sql_indexes columns as key columns of the table
-    Consolidate information about tracked modules and SQL Id
-    """
-    # global track_sql_ids
-
-    section_df = df.iloc[0:table_size]
-    sorted_df = section_df[sql_indexes].copy()
-
-    # Can't since module are duplicate
-    # sorted_df.set_index(keys='SQL Module', inplace=True)
-
-    for column in section_df.columns:
-        if column not in sorted_df.columns:
-            sorted_df[column] = section_df[column]
-
-    # print(f"\ntrack_sql_ids: {configuration.track_sql_ids} - type: {type(configuration.track_sql_ids)}")
-    # for sql_id in configuration.track_sql_ids:
-    #     executions = at("sql_id", "Executions", sorted_df)
-    #     if executions is None:
-    #         executions = 0
-    #
-    #     sql_statement = at("sql_id", "SQL Text", sorted_df)
-    #     if sql_statement is None:
-    #         sql_statement = ""
-    #
-    #     track_elements.add_sql_id(sql_id, executions, sql_statement)
-    #
-    #     print(f"{sql_id} - {sql_statement} - {executions}")
-
-    return sorted_df.reindex(index=range(0, table_size))
-
-
 def extract_sql_table_with_tracking(df):
     """
     Extract information from a table with information about SQL statements
@@ -240,14 +206,10 @@ def extract_sql_table_with_tracking(df):
         if executions is None:
             executions = 0
 
-        print(f"{sql_module} - {sql_id} - {sql_text}")
-
         if sql_id in configuration.track_sql_ids:
             track_elements.add_sql_id(sql_id, executions, sql_text)
-            # print(f"\tAdded to tracked_sql_id: {sql_id} - {executions} - {sql_text}")
 
         if sql_module in configuration.track_sql_modules:
             track_elements.add_sql_module(sql_module, sql_id, executions, sql_text)
-            # print(f"\tAdded to tracked_sql_module: {module} - {sql_id} - {executions} - {sql_text}")
 
-    return temp_df
+    return temp_df.reindex(index=range(0, table_size))

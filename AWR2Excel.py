@@ -7,6 +7,7 @@ from modules.constants import awr_sections
 from modules.constants import summary_section_key
 from modules.constants import checks_section_key
 
+import modules.constants as constants
 import modules.configuration as configuration
 import modules.extract_data as extract_data
 import modules.sanity_checks as sanity_checks
@@ -63,36 +64,54 @@ def main():
 
                     # Scrap AWR html report
                     soup = BeautifulSoup(file_stream, 'lxml')
-
-                    # Create report, summary section and add the AWR filename to the summary section
-                    report = {summary_section_key: pd.DataFrame(columns=['Parameter', 'Value'])}
-                    report[summary_section_key].loc[len(report[summary_section_key])] = {'Parameter': 'file',
-                                                                                         'Value': Path(file).name}
-
-                    # Extract and format the tables from the AWR file
-                    for section_index in range(0, len(awr_sections)):
-                        extract_data.process_section(section_index, soup, report)
-
-                    # add the report to the list of reports
-                    summary_df = report[summary_section_key].copy()
-                    summary_df.set_index("Parameter", inplace=True)
-                    begin_date_time = sanity_checks.at("beginDateTime", "Value", summary_df)
-
-                    # Perform sanity checks of this report
-                    sanity_checks.perform_sanity_checks(report, checks_section_key, configuration.thresholds)
-
-                    # Add the report to the list of reports
-                    reports[begin_date_time] = report
                 finally:
                     if file_stream is not None:
                         file_stream.close()
 
+                # Create report, summary section and add the AWR filename to the summary section
+                report = {summary_section_key: pd.DataFrame(columns=['Parameter', 'Value'])}
+                report[summary_section_key].loc[len(report[summary_section_key])] = {'Parameter': 'file',
+                                                                                     'Value': Path(file).name}
+
+                # clear tracked stuff
+                track_elements.clear_tracked_sql_ids()
+                track_elements.clear_tracked_sql_modules()
+
+                # Extract and format the tables from the AWR file
+                for section_index in range(0, len(awr_sections)):
+                    extract_data.process_section(section_index, soup, report)
+
+                # add the report to the list of reports
+                summary_df = report[summary_section_key].copy()
+                summary_df.set_index("Parameter", inplace=True)
+                # begin_date_time = sanity_checks.at("beginDateTime", "Value", summary_df)
+
+                # Append tracked SQLs section to report
+                tracked_sql_ids_df = pd.DataFrame.from_dict(track_elements.get_tracked_sql_ids(), orient="index",
+                                                            columns=["Executions", "SQL Text"])
+                tracked_sql_ids_df.reset_index(inplace=True)
+                tracked_sql_ids_df.rename(columns={'index': 'SQL Id'}, inplace = True)
+                report["tracked_sql_ids_section"] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
+
+                # Append tracked Modules section to report
+                tracked_sql_ids_df = pd.DataFrame.from_dict(track_elements.get_tracked_sql_modules(), orient="index",
+                                                            columns=["Executions", "SQL Module", "SQL Text"])
+                tracked_sql_ids_df.reset_index(inplace=True)
+                tracked_sql_ids_df.rename(columns={'index': 'SQL Id'}, inplace = True)
+                report["tracked_sql_modules_section"] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
+
+                # Perform sanity checks of this report
+                sanity_checks.perform_sanity_checks(report, checks_section_key, configuration.thresholds)
+
+                # Add the report to the list of reports
+                begin_date_time = sanity_checks.at("beginDateTime", "Value", summary_df)
+                reports[begin_date_time] = report
+
         excel_tabs.print_reports(reports)
 
     finally:
-        print(f"get_tracked_sql_ids - {track_elements.get_tracked_sql_ids()}")
-        print(f"get_tracked_sql_modules - {track_elements.get_tracked_sql_modules()}")
-        print('AWR2Excel.py Finished')
+        # print(f"\nget_tracked_sql_modules - {track_elements.get_tracked_sql_modules()}")
+        print('\nAWR2Excel.py Finished')
 
 
 if __name__ == '__main__':
