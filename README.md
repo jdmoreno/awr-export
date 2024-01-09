@@ -47,19 +47,19 @@ limit_exceptions_events_ratio_error = 10
 
 ``` 
 
-| **Condition**                                         | **Parameter**                |
-|-------------------------------------------------------|------------------------------|
-| Inserts in exceptions table                           | limit_exceptions_events_ratio_error                      |
-| Cursor: mutex S                                       | limit_cursor_mutex_s_event_waits_error      |
-| Cursor: mutex X                                       | limit_cursor_mutex_x_event_waits_error      |
-| Library cache lock                                    | limit_library_cache_lock_event_waits_error      |
-| Execute to Parse %                                    | limit_execute_to_parse_error |
-| DB Time(s) vs DB CPU(s)                               | Pending                      |
-| Parses (SQL)                                          | Pending                      |
-| Individual versions of SQL statement                  | limit_version_one_error      |
-| Total versions of SQL statements                      | limit_version_all_error      |
-| DB Time vs Elapsed time                               | Pending                      |
-| %DB time on Concurrency Wait Class of Total Wait Time | limit_concurrency_db_time_error      |
+| **Condition**                                         | **Parameter**                              |
+|-------------------------------------------------------|--------------------------------------------|
+| Inserts in exceptions table                           | limit_exceptions_events_ratio_error        |
+| Cursor: mutex S                                       | limit_cursor_mutex_s_event_waits_error     |
+| Cursor: mutex X                                       | limit_cursor_mutex_x_event_waits_error     |
+| Library cache lock                                    | limit_library_cache_lock_event_waits_error |
+| Execute to Parse %                                    | limit_execute_to_parse_error               |
+| DB Time(s) vs DB CPU(s)                               | Pending                                    |
+| Parses (SQL)                                          | Pending                                    |
+| Individual versions of SQL statement                  | limit_version_one_error                    |
+| Total versions of SQL statements                      | limit_version_all_error                    |
+| DB Time vs Elapsed time                               | Pending                                    |
+| %DB time on Concurrency Wait Class of Total Wait Time | limit_concurrency_db_time_error            |
 
 ## Examples
 * Example: AWR with versions and concurrency DB Time % below 5%
