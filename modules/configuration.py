@@ -8,16 +8,17 @@ track_sql_ids = None
 track_sql_modules = None
 
 
-def read_config_file():
+def read_config_file(file_path: str):
+    # 'AWR2Excel.ini'
     config = configparser.ConfigParser()
-    config.read('AWR2Excel.ini')
+    config.read(file_path)
     return config
 
 
-def read_configuration():
+def read_configuration(file_path: str):
     global thresholds, track_sql_ids, track_sql_modules
 
-    config = read_config_file()
+    config = read_config_file(file_path)
 
     # Read thresholds
     limit_execute_to_parse_error = float(config['CHECKS_THRESHOLDS']['limit_execute_to_parse_error'])

@@ -23,6 +23,7 @@ def main():
 
         parser = argparse.ArgumentParser(description=version_description)
         parser.add_argument('-files', help='Comma-delimited list of HTML AWR files', default='')
+        parser.add_argument('-config', help='Path to configuration file', default='')
 
         # If parse fail will show help
         args = parser.parse_args()

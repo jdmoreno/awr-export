@@ -5,8 +5,16 @@ none_type = type(None)
 
 
 def str_to_float(str_num):
+
+    # remove (mins)
     tmp_str_num = str_num.replace(" (mins)", "")  # Remove '(mins)'
+
+    # remove ','
     tmp_str_num = tmp_str_num.replace(",", "")  # Remove ','
+
+    # remove trailing '.'
+    tmp_str_num = tmp_str_num.rstrip('.')
+
     return float(tmp_str_num)
 
 
@@ -17,7 +25,10 @@ def populate_kv_lists(df, key_list, value_list, index):
     if type(df[index + 1]) is float:
         value = df[index + 1]
     else:
-        value = float(df[index + 1][0:6])
+        value = str_to_float(df[index + 1][0:6])
+        # Some percentages are read as 99.99.
+        # value = float(df[index + 1][0:6])
+
     # print(f"Key {key} - Value {value}")
     key_list.append(key)
     value_list.append(value)
