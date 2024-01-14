@@ -8,6 +8,7 @@ import modules.configuration as configuration
 
 from datetime import datetime
 from io import StringIO
+import logging
 
 # import constants
 from modules.constants import awr_sections
@@ -188,11 +189,16 @@ def extract_sql_table_with_tracking(df):
     # print(f"sorted_df SQL Id - \n{sorted_df}")
 
     temp_df = df.iloc[0:table_size]
-    # sorted_df = section_df[sql_indexes].copy()
+    column_order = 0
+    for column_name in sql_indexes:
+        column = temp_df.pop(column_name)
+        temp_df.insert(column_order, column_name, column)
+        column_order += 1
 
     for row in temp_df.index:
 
-        sql_id = temp_df.loc[row]["SQL Id"]
+        sql_id: str = temp_df.loc[row]["SQL Id"]
+        # logging.debug(f"SQL Id: {sql_id}")
 
         sql_module = temp_df.loc[row]["SQL Module"]
         if sql_module is None:
@@ -213,3 +219,26 @@ def extract_sql_table_with_tracking(df):
             track_elements.add_sql_module(sql_module, sql_id, executions, sql_text)
 
     return temp_df.reindex(index=range(0, table_size))
+
+
+def aggregations():
+    accum_aggregations = {}
+
+    tracker = configuration.config["TRACKER"]
+    # logging.debug(f"tracker: {tracker}")
+
+    # Store sql ids to track
+    aggregations_track_sql_ids = tracker["track_sql_ids"]
+
+    tracked_sql_ids = track_elements.get_tracked_sql_ids()
+    for sql_id in tracked_sql_ids:
+        # print(f"aggregations - sql_id: {sql_id}")
+        for aggregation in aggregations_track_sql_ids:
+            if aggregation not in accum_aggregations.keys():
+                accum_aggregations[aggregation] = 0
+            # print(f"\taggregations - aggregation: {aggregation} - values: {aggregations_track_sql_ids[aggregation]} ")
+            if sql_id in aggregations_track_sql_ids[aggregation]:
+                print(f"\t\tadd to aggregation: {aggregation} - sql_id: {sql_id} - executions {tracked_sql_ids[sql_id][0]}")
+                accum_aggregations[aggregation] = accum_aggregations[aggregation] + tracked_sql_ids[sql_id][0]
+
+    print(f"aggregations: {accum_aggregations}")

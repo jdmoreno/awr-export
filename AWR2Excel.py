@@ -2,6 +2,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import glob
 import argparse
+import logging
 from pathlib import Path
 from modules.constants import awr_sections
 from modules.constants import summary_section_key
@@ -16,6 +17,7 @@ import modules.track_elements as track_elements
 
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     try:
         # CMD Parameters
         version = '1.0'
@@ -23,7 +25,7 @@ def main():
 
         parser = argparse.ArgumentParser(description=version_description)
         parser.add_argument('-files', help='Comma-delimited list of HTML AWR files', default='')
-        parser.add_argument('-config', help='Path to configuration file', default='')
+        parser.add_argument('-config', help='Path to configuration file', default='AWR2Excel.ini')
 
         # If parse fail will show help
         args = parser.parse_args()
@@ -35,7 +37,9 @@ def main():
 
         # Read configuration
         try:
-            configuration.read_configuration()
+            config_path = args.config
+            print (f"config path {config_path}")
+            configuration.read_configuration(config_path)
         except OSError as err:
             print(f"OS error:", err)
             return
@@ -100,6 +104,9 @@ def main():
                 tracked_sql_ids_df.reset_index(inplace=True)
                 tracked_sql_ids_df.rename(columns={'index': 'SQL Id'}, inplace = True)
                 report["tracked_sql_modules_section"] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
+
+                # aggregations
+                extract_data.aggregations()
 
                 # Perform sanity checks of this report
                 sanity_checks.perform_sanity_checks(report, checks_section_key, configuration.thresholds)

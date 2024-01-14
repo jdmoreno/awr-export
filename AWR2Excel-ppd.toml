@@ -18,14 +18,19 @@ limit_library_cache_mutex_x_event_waits_error = 0
 limit_cursor_pin_s_wait_on_x_event_waits_error = 0
 limit_exceptions_events_ratio_error = 10
 
-[TRACK_SQLID]
+[TRACKER]
 # 7wcmwtk6ay1c9 - INSERT INTO EVENT
 # 42578a4znzq41 - INSERT INTO EVENT
 # adxgsarcwdbdr - UPDATE MAILPIECE
-# 5b788rr51m8gt - UPDATE EVENT SET MAIL_PIECE_ID
+# cvq3d9nzdp5w7 - INSERT INTO MAIL_PIECE
+# 39zxtftut2dxs - INSERT INTO MAIL_PIECE
 # 47byg9a0mdfmx - INSERT INTO EXCEPTION_LOG_ATTA
-# cvq3d9nzdp5w7 - INSERT INTO MAIL_PIECE(MAIL_PI...
-track_sql_ids = ["7wcmwtk6ay1c9", "42578a4znzq41", "adxgsarcwdbdr", "5b788rr51m8gt", "47byg9a0mdfmx", "cvq3d9nzdp5w7"]
+# 5b788rr51m8gt - UPDATE EVENT SET MAIL_PIECE_ID
 
-[TRACK_SQLMODULE]
+[TRACKER.track_sql_ids]
+events = ["7wcmwtk6ay1c9", "42578a4znzq41"]
+mailpieces = ["adxgsarcwdbdr", "cvq3d9nzdp5w7", "39zxtftut2dxs"]
+errors = ["47byg9a0mdfmx"]
+
+[TRACKER.track_sql_modules]
 track_sql_modules = ["DBMS_SCHEDULER", "SQL Developer"]

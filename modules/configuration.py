@@ -1,22 +1,25 @@
-import configparser
+# import configparser
+import tomllib
 import json
+import logging
 
 # from typing import Dict
 
+config = None
 thresholds = None
 track_sql_ids = None
 track_sql_modules = None
 
 
 def read_config_file(file_path: str):
-    # 'AWR2Excel.ini'
-    config = configparser.ConfigParser()
-    config.read(file_path)
-    return config
+    with open(file_path, mode="rb") as file:
+        local_config = tomllib.load(file)
+    logging.debug(f"config: {local_config}")
+    return local_config
 
 
 def read_configuration(file_path: str):
-    global thresholds, track_sql_ids, track_sql_modules
+    global thresholds, track_sql_ids, track_sql_modules, config
 
     config = read_config_file(file_path)
 
@@ -56,13 +59,28 @@ def read_configuration(file_path: str):
                   }
 
     # Read SQL Ids to track
-    track_sql_ids = config_read_list(config["TRACK_SQLID"]['track_sqL_ids'])
+    tracker = config["TRACKER"]
+    logging.debug(f"tracker: {tracker}")
 
-    # Read SQL Ids to track
-    track_sql_modules = config_read_list(config["TRACK_SQLMODULE"]['track_sql_modules'])
+    # Store sql ids to track
+    tracker_element = tracker["track_sql_ids"]
+    logging.debug(f"tracker_element: {tracker_element}")
+    track_sql_ids = []
 
-    # print_configuration(thresholds, track_sql_ids, track_sql_modules)
+    for value in tracker_element.values():
+        track_sql_ids.extend(value)
 
+    logging.debug(f"track_sql_ids: {track_sql_ids}")
+
+    # Store sql modules to track
+    tracker_element = tracker["track_sql_modules"]
+    logging.debug(f"tracker_element: {tracker_element}")
+    track_sql_modules = []
+
+    for value in tracker_element.values():
+        track_sql_modules.extend(value)
+
+    logging.debug(f"track_sql_modules: {track_sql_modules}")
     return
 
 
@@ -74,13 +92,13 @@ def print_configuration():
     print(f"\ttrack_sql_modules: {track_sql_modules} - {type(track_sql_modules)}")
 
 
-def config_read_list(value: str) -> list:
-    ret_value = []
-    if value.startswith("[") and value.endswith("]"):
-        # handle special case of k=[1,2,3] or other json-like syntax
-        try:
-            ret_value = json.loads(value)
-        except Exception:
-            # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
-            ret_value = [elem.strip() for elem in value[1:-1].split(",")]
-    return ret_value
+# def config_read_list(value: str) -> list:
+#     ret_value = []
+#     if value.startswith("[") and value.endswith("]"):
+#         # handle special case of k=[1,2,3] or other json-like syntax
+#         try:
+#             ret_value = json.loads(value)
+#         except Exception:
+#             # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
+#             ret_value = [elem.strip() for elem in value[1:-1].split(",")]
+#     return ret_value
