@@ -1,4 +1,7 @@
 from datetime import datetime
+
+import pandas
+import pandas as pd
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils.cell import get_column_letter
@@ -7,12 +10,10 @@ from openpyxl.styles import PatternFill
 from openpyxl.styles import numbers
 from openpyxl.formatting.rule import FormulaRule
 
-
 titles_row = 6
 summary_range = "!$A$4:$B$23"
 ad_checks_range = "!$A$262:$C$271"
 tracked_sql_id_range = "!$A$236:$B$245"
-
 
 ns_yyyy_mm_dd_h_mm_ss = NamedStyle(name="datetime", number_format="yyyy-mm-dd h:mm:ss")
 ns_h_mm_ss = NamedStyle(name="time", number_format="h:mm:ss")
@@ -79,7 +80,8 @@ def create_sheet_checks(work_book: Workbook, tabs: list):
             lookup_col = 2
             column_letter = get_column_letter(column)
 
-            work_sheet.cell(row=row, column=column, value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
+            work_sheet.cell(row=row, column=column,
+                            value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
             if column_letter == "D":
                 work_sheet.cell(row=row, column=column).style = ns_yyyy_mm_dd_h_mm_ss
 
@@ -92,12 +94,8 @@ def create_sheet_checks(work_book: Workbook, tabs: list):
             f"J{row}=True"], stopIfTrue=True, fill=amberFill))
 
 
-def create_sheet_summary(work_book: Workbook, tabs: list):
-    """
-    Create the checks tab
-    """
-    work_sheet = work_book.create_sheet("Summary", 1)
-
+def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: dict):
+    # create_sheet_summary(wb, df_sheets, reports)
     ranges = [
         summary_range,
         summary_range,
@@ -154,6 +152,11 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
         "47byg9a0mdfmx"
     ]
 
+    """
+    Create the summary tab
+    """
+    work_sheet = work_book.create_sheet("Summary", 1)
+
     # Print ranges
     print_ranges(ranges, work_sheet)
 
@@ -161,6 +164,11 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
     print_titles(titles, work_sheet)
 
     # Print data
+    print(f"df_sheets: {df_sheets}")
+    keys = df_sheets.loc[:, "keys"].to_list()
+    tabs = df_sheets.loc[:, "sheets"].to_list()
+    print(f"tabs: {tabs}, {type(tabs)}")
+
     row_start = 7
     for j in range(0, len(tabs)):
         row = row_start + j
@@ -206,15 +214,18 @@ def create_sheet_summary(work_book: Workbook, tabs: list):
                     work_sheet.cell(row=row, column=column).number_format = "0.00"
 
                 case "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S":
-                    work_sheet.cell(row=row, column=column, value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
+                    work_sheet.cell(row=row, column=column,
+                                    value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
                     work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
 
                 case "V" | "W" | "X" | "Y" | "Z":
-                    work_sheet.cell(row=row, column=column, value=f"=_xlfn.IFNA(VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE), 0)")
+                    work_sheet.cell(row=row, column=column,
+                                    value=f"=_xlfn.IFNA(VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE), 0)")
                     work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
 
                 case _:
-                    work_sheet.cell(row=row, column=column, value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
+                    work_sheet.cell(row=row, column=column,
+                                    value=f"=VLOOKUP({column_letter}${titles_row},INDIRECT(_xlfn.CONCAT($B{row}, {column_letter}$5)), {lookup_col}, FALSE)")
 
 
 def print_titles(titles, work_sheet):
@@ -240,16 +251,20 @@ def print_reports(reports: dict):
     wb = Workbook()
     sheet_counter = 0
     sheets = []
+    # write one sheet per AWR
     for key in list_keys:
         # Create a tab per AWR file
-        sheet_name = "AWR2Excel_{}".format(sheet_counter)
+        sheet_name = f"AWR2Excel_{sheet_counter}"
         sheets.append(sheet_name)
+        # sheets.append({"key": key, "sheet_name": sheet_name})
+        # sheets.append({"key": key, "sheet_name": sheet_name})
+        # print(f"sheets: {sheets}")
 
         sheet_counter += 1
         ws = wb.create_sheet(sheet_name)
         report = reports[key]
 
-        # Write sections
+        # Write the sections of an AWR
         for section_key in report:
             section_df = report[section_key]
             ws.append([])
@@ -259,11 +274,17 @@ def print_reports(reports: dict):
             for row in dataframe_to_rows(section_df, index=False, header=True):
                 ws.append(row)
 
+    # name = sheets[0]["sheet_name"]
+    # print(f"sheets: {name}")
+    # d = {'keys': list_keys, 'sheets': sheets}
+    df_sheets = pandas.DataFrame(data={'keys': list_keys, 'sheets': sheets})
+    # print(df)
+
     # create checks sheet
     create_sheet_checks(wb, sheets)
 
     # create summary sheet
-    create_sheet_summary(wb, sheets)
+    create_sheet_summary(wb, df_sheets, reports)
 
     # convert datetime obj to string
     # write a file object along with .xlsx extension

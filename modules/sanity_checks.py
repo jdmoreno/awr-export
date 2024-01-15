@@ -1,6 +1,7 @@
+import pandas
 import pandas as pd
 from modules.common import at
-
+from modules.constants import summary_section_key
 
 def perform_sanity_checks(report: dict, checks_section_key: str, thresholds: dict):
     check_results = {}
@@ -33,10 +34,13 @@ def perform_sanity_checks(report: dict, checks_section_key: str, thresholds: dic
     evidences_list = []
     # print(check_results)
     for key, value in check_results.items():
-        # print(f"{key} - {value}")
+        result = value["result"]
+        evidence = value["evidence"]
+
         checks_list.append(key)
-        results_list.append(value["result"])
-        evidences_list.append(value["evidence"])
+        results_list.append(result)
+        evidences_list.append(evidence)
+
     report[checks_section_key] = pd.DataFrame(
         data={"Check": checks_list, "Result": results_list, "Evidence": evidences_list})
 

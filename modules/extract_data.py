@@ -1,16 +1,9 @@
-# from constants import awr_sections
-# from constants import table_size
-# from constants import summary_section_key
-# from constants import sql_indexes
-
 import modules.configuration as configuration
-# from modules.configuration import track_sql_ids
 
 from datetime import datetime
 from io import StringIO
 import logging
 
-# import constants
 from modules.constants import awr_sections
 from modules.constants import table_size
 from modules.constants import summary_section_key
