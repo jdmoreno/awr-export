@@ -208,8 +208,10 @@ def extract_sql_table_with_tracking(df):
         if sql_id in configuration.track_sql_ids:
             track_elements.add_sql_id(sql_id, executions, sql_text)
 
-        if sql_module in configuration.track_sql_modules:
-            track_elements.add_sql_module(sql_module, sql_id, executions, sql_text)
+        # updated to check sqlplus in cases like sqlplus@RMULBGORA5002 (TNS V1-V3)
+        for tracked_module in configuration.track_sql_modules:
+            if sql_module in tracked_module:
+                track_elements.add_sql_module(sql_module, sql_id, executions, sql_text)
 
     return temp_df.reindex(index=range(0, table_size))
 

@@ -29,6 +29,9 @@ def perform_sanity_checks(report: dict, checks_section_key: str, thresholds: dic
             case 'This table displays wait class statistics ordered by total wait time':
                 wait_classes_by_total_wait_time(dataframe, thresholds, check_results)
 
+            case 'This table displays wait class statistics ordered by total wait time':
+                wait_classes_by_total_wait_time(dataframe, thresholds, check_results)
+
     checks_list = []
     results_list = []
     evidences_list = []

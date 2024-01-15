@@ -133,7 +133,7 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
         "elapsedTime",
         "dbTime",
         "dbTime %",
-        "busyCPU",
+        "userCPU",
         "endSessions",
         "library_cache_lock_event_waits",
         "cursor_mutex_x_event_waits",
