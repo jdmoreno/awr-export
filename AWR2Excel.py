@@ -61,7 +61,13 @@ def main():
 
         reports: dict = {}
         for fn in filelist:
-            files = glob.glob(fn)
+            # files = glob.glob(fn)
+
+            file_path = Path(fn)
+            parent_path = file_path.parent
+            file_name = file_path.name
+            files = sorted(parent_path.rglob(file_name))
+
             for file in files:
                 process_awr(file, reports)
 
