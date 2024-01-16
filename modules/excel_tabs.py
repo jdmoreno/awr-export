@@ -277,8 +277,13 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
             column += 1
 
         # Print aggregations
+        section = constants.aggregations_section_key
+        index_name = "Aggregation"
+        dataframe = get_dataframe(reports, key, section=section, index_name=index_name)
+
         for aggregation_key in aggregations.accum_aggregations.keys():
-            value = aggregations.accum_aggregations.get(aggregation_key)
+            # value = aggregations.accum_aggregations.get(aggregation_key)
+            value = common.at(aggregation_key, "Total", dataframe)
             work_sheet.cell(row=row, column=column, value=value)
             work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
             column += 1
@@ -503,7 +508,8 @@ def print_tracked_sql_ids(list, work_sheet, row, column):
 
 
 def print_reports(reports: dict):
-    # print (reports) sorted by date
+    print('Generating excel spreadsheet')
+    args = arguments.get_args()
     list_keys = sorted(reports.keys())
 
     wb = Workbook()
@@ -513,30 +519,28 @@ def print_reports(reports: dict):
     for key in list_keys:
         # Create a tab per AWR file
         sheet_name = f"AWR2Excel_{sheet_counter}"
-        sheets.append(sheet_name)
-        # sheets.append({"key": key, "sheet_name": sheet_name})
-        # sheets.append({"key": key, "sheet_name": sheet_name})
-        # print(f"sheets: {sheets}")
-
         sheet_counter += 1
-        ws = wb.create_sheet(sheet_name)
-        report = reports[key]
+        sheets.append(sheet_name)
 
-        # Write the sections of an AWR
-        for section_key in report:
-            section_df = report[section_key]
-            ws.append([])
+        if args.summary:
+            pass
+        else:
+            print(f'Generating excel tab {sheet_name}')
+            ws = wb.create_sheet(sheet_name)
+            report = reports[key]
 
-            ws.append([section_key])
+            # Write the sections of an AWR
+            for section_key in report:
+                section_df = report[section_key]
+                ws.append([])
 
-            for row in dataframe_to_rows(section_df, index=False, header=True):
-                ws.append(row)
+                ws.append([section_key])
 
-    # name = sheets[0]["sheet_name"]
-    # print(f"sheets: {name}")
-    # d = {'keys': list_keys, 'sheets': sheets}
+                for row in dataframe_to_rows(section_df, index=False, header=True):
+                    ws.append(row)
+
+    # create checks sheet
     df_sheets = pandas.DataFrame(data={'keys': list_keys, 'sheets': sheets})
-    # print(df)
 
     # create checks sheet
     create_sheet_checks(wb, df_sheets, reports)
@@ -553,3 +557,4 @@ def print_reports(reports: dict):
     output_path = Path(args.output)
     Path(output_path).mkdir(parents=True, exist_ok=True)
     wb.save(output_path / out_filename)
+    print(f'Spreadsheet written at {output_path / out_filename}')

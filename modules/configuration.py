@@ -14,7 +14,7 @@ track_sql_modules = None
 def read_config_file(file_path: str):
     with open(file_path, mode="rb") as file:
         local_config = tomllib.load(file)
-    logging.debug(f"config: {local_config}")
+    # logging.debug(f"config: {local_config}")
     return local_config
 
 
@@ -64,27 +64,27 @@ def read_configuration(file_path: str):
 
     # Read SQL Ids to track
     tracker = config["TRACKER"]
-    logging.debug(f"tracker: {tracker}")
+    # logging.debug(f"tracker: {tracker}")
 
     # Store sql ids to track
     tracker_element = tracker["track_sql_ids"]
-    logging.debug(f"tracker_element: {tracker_element}")
+    # logging.debug(f"tracker_element: {tracker_element}")
     track_sql_ids = []
 
     for value in tracker_element.values():
         track_sql_ids.extend(value)
 
-    logging.debug(f"track_sql_ids: {track_sql_ids}")
+    # logging.debug(f"track_sql_ids: {track_sql_ids}")
 
     # Store sql modules to track
     tracker_element = tracker["track_sql_modules"]
-    logging.debug(f"tracker_element: {tracker_element}")
+    # logging.debug(f"tracker_element: {tracker_element}")
     track_sql_modules = []
 
     for value in tracker_element.values():
         track_sql_modules.extend(value)
 
-    logging.debug(f"track_sql_modules: {track_sql_modules}")
+    # logging.debug(f"track_sql_modules: {track_sql_modules}")
     return
 
 

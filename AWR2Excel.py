@@ -28,11 +28,13 @@ def main():
 
         # Process arguments
         args = arguments.process_arguments(version_description)
+        arguments.print_arguments()
 
         if args.files == '':
             print('You need to pass the AWR HTML file name.')
             print('Example: AWR2Excel.py -file /path/awrfile.html or AWR2Excel.py -file /path/*.html')
             return
+
 
         # Read configuration
         try:
