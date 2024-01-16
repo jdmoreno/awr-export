@@ -277,11 +277,11 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
             column += 1
 
         # Print aggregations
-        # for aggregation_key in aggregations.accum_aggregations.keys():
-        #     value = aggregations.accum_aggregations.get(aggregation_key)
-        #     work_sheet.cell(row=row, column=column, value=value)
-        #     work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
-        #     column += 1
+        for aggregation_key in aggregations.accum_aggregations.keys():
+            value = aggregations.accum_aggregations.get(aggregation_key)
+            work_sheet.cell(row=row, column=column, value=value)
+            work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
+            column += 1
         row += 1
 
 

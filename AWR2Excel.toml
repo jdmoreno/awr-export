@@ -1,0 +1,30 @@
+[CHECKS_THRESHOLDS]
+
+# Errors
+# Above the threshold
+limit_library_cache_lock_event_waits_error = 0
+limit_cursor_mutex_s_event_waits_error = 0
+limit_cursor_mutex_x_event_waits_error = 0
+limit_version_one_error = 50
+limit_version_all_error = 200
+limit_cpu_error = 80
+
+# Warnings
+# below the threshold
+limit_execute_to_parse_error = 40
+
+# Above the threshold
+limit_concurrency_db_time_error = 5
+limit_library_cache_mutex_x_event_waits_error = 0
+limit_cursor_pin_s_wait_on_x_event_waits_error = 0
+limit_exceptions_events_ratio_error = 10
+
+[TRACKER]
+
+[TRACKER.track_sql_ids]
+events = ["7wcmwtk6ay1c9", "42578a4znzq41",  "cu8nfwfd711uc"]
+mailpieces = ["adxgsarcwdbdr", "cvq3d9nzdp5w7", "39zxtftut2dxs"]
+errors = ["47byg9a0mdfmx"]
+
+[TRACKER.track_sql_modules]
+track_sql_modules = ["DBMS_SCHEDULER", "SQL Developer", "sqlplus"]

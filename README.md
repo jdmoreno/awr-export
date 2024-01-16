@@ -3,9 +3,21 @@ Oracle AWR html export and sanity checks
 
 Based on: https://www.linkedin.com/pulse/easy-way-developers-dbas-analyze-data-from-oracle-awr-alexandre-marti
 
+## Arguments:
+| Argument    | Description                            | Mandatory |
+|-------------|----------------------------------------|-----------|
+| -files, -f  | Comma-delimited list of HTML AWR files | Yes       |
+| -config, -c | Path to configuration file (.toml)     | No        |
+| -output, -o | Output directory                       | No        |
+
+
 ## Usage:
+```commandline
+python AWR2Excel.py -files ".\test\in\PRD - 2023-10-02\awr_rmgtibp_1_231002_1100_1130.html"
 ```
-python AWR2Excel.py -files <AWR html file name list or mask>
+
+```commandline
+python ".\awr-export\AWR2Excel.py" -c AWR2Excel-ppd.toml -o "output" -f ".\PPD\AWR-PPD-PARALLEL-15thJAN\*.html"
 ```
 
 ## Checks
@@ -24,6 +36,7 @@ Summary of the checks implemented:
 | SQL Id version count                          | Total versions of SQL statements                      | 100                                              | 200                                             | Implemented |                                                   |
 | Summary                                       | DB Time vs Elapsed time                               | 10                                               | 18                                              | Pending     | Similar to DB Time(s) vs DB CPU(s)                |
 | Top 10 Foreground Events by Total Wait Time   | %DB time on Concurrency Wait Class of Total Wait Time | 5%                                               | 10%                                             | Implemented |                                                   |
+| Host CPU                                      | CPU load is not above 80% consistently for 5 min      | 80%                                              |                                                 |             |                                                   |
 
 Details can be found at: https://andotce.royalmailgroup.com/display/EPSP/EPS+Cloud+-+DV+-+80+-+Oracle+Database+Management+System+-+Regression+tests
 
@@ -60,6 +73,7 @@ limit_exceptions_events_ratio_error = 10
 | Total versions of SQL statements                      | limit_version_all_error                    |
 | DB Time vs Elapsed time                               | Pending                                    |
 | %DB time on Concurrency Wait Class of Total Wait Time | limit_concurrency_db_time_error            |
+| CPU load is not above 80% consistently for 5 min      | limit_cpu_error                            |
 
 ## Examples
 * Example: AWR with versions and concurrency DB Time % below 5%
