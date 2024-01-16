@@ -1,3 +1,5 @@
+import pandas
+
 import modules.configuration as configuration
 
 from datetime import datetime
@@ -114,6 +116,12 @@ def process_section(section_index, soup, report):
                 user_cpu = df.at[0, '%User']
                 df_summary.loc[len(df_summary)] = {'Parameter': 'userCPU', 'Value': user_cpu}
 
+                system_cpu = df.at[0, '%System']
+                df_summary.loc[len(df_summary)] = {'Parameter': 'systemCPU', 'Value': system_cpu}
+
+                idle_cpu = df.at[0, '%Idle']
+                df_summary.loc[len(df_summary)] = {'Parameter': 'idleCpu', 'Value': idle_cpu}
+
             case 7:
                 df_summary = report[summary_section_key]
 
@@ -191,18 +199,19 @@ def extract_sql_table_with_tracking(df):
     for row in temp_df.index:
 
         sql_id: str = temp_df.loc[row]["SQL Id"]
-        # logging.debug(f"SQL Id: {sql_id}")
+        if pandas.isna(sql_id):
+            sql_id = ""
 
-        sql_module = temp_df.loc[row]["SQL Module"]
-        if sql_module is None:
+        sql_module: str = temp_df.loc[row]["SQL Module"]
+        if pandas.isna(sql_module):
             sql_module = ""
 
-        sql_text = temp_df.loc[row]["SQL Text"]
-        if sql_text is None:
+        sql_text: str = temp_df.loc[row]["SQL Text"]
+        if pandas.isna(sql_text):
             sql_text = ""
 
         executions = temp_df.loc[row]["Executions"]
-        if executions is None:
+        if pandas.isna(executions):
             executions = 0
 
         if sql_id in configuration.track_sql_ids:
@@ -216,24 +225,24 @@ def extract_sql_table_with_tracking(df):
     return temp_df.reindex(index=range(0, table_size))
 
 
-def aggregations():
-    accum_aggregations = {}
-
-    tracker = configuration.config["TRACKER"]
-    # logging.debug(f"tracker: {tracker}")
-
-    # Store sql ids to track
-    aggregations_track_sql_ids = tracker["track_sql_ids"]
-
-    tracked_sql_ids = track_elements.get_tracked_sql_ids()
-    for sql_id in tracked_sql_ids:
-        # print(f"aggregations - sql_id: {sql_id}")
-        for aggregation in aggregations_track_sql_ids:
-            if aggregation not in accum_aggregations.keys():
-                accum_aggregations[aggregation] = 0
-            # print(f"\taggregations - aggregation: {aggregation} - values: {aggregations_track_sql_ids[aggregation]} ")
-            if sql_id in aggregations_track_sql_ids[aggregation]:
-                print(f"\t\tadd to aggregation: {aggregation} - sql_id: {sql_id} - executions {tracked_sql_ids[sql_id][0]}")
-                accum_aggregations[aggregation] = accum_aggregations[aggregation] + tracked_sql_ids[sql_id][0]
-
-    print(f"aggregations: {accum_aggregations}")
+# def aggregations():
+#     accum_aggregations = {}
+#
+#     tracker = configuration.config["TRACKER"]
+#     # logging.debug(f"tracker: {tracker}")
+#
+#     # Store sql ids to track
+#     aggregations_track_sql_ids = tracker["track_sql_ids"]
+#
+#     tracked_sql_ids = track_elements.get_tracked_sql_ids()
+#     for sql_id in tracked_sql_ids:
+#         # print(f"aggregations - sql_id: {sql_id}")
+#         for aggregation in aggregations_track_sql_ids:
+#             if aggregation not in accum_aggregations.keys():
+#                 accum_aggregations[aggregation] = 0
+#             # print(f"\taggregations - aggregation: {aggregation} - values: {aggregations_track_sql_ids[aggregation]} ")
+#             if sql_id in aggregations_track_sql_ids[aggregation]:
+#                 # print(f"\t\tadd to aggregation: {aggregation} - sql_id: {sql_id} - executions {tracked_sql_ids[sql_id][0]}")
+#                 accum_aggregations[aggregation] = accum_aggregations[aggregation] + tracked_sql_ids[sql_id][0]
+#
+#     print(f"aggregations: {accum_aggregations}")

@@ -44,6 +44,8 @@ def read_configuration(file_path: str):
     limit_exceptions_events_ratio_error = float(
         config['CHECKS_THRESHOLDS']['limit_exceptions_events_ratio_error']) / 100
 
+    limit_cpu_error = float(config['CHECKS_THRESHOLDS']['limit_cpu_error'])
+
     thresholds = {"limit_execute_to_parse_error": limit_execute_to_parse_error,
                   "limit_concurrency_db_time_error": limit_concurrency_db_time_error,
                   "limit_library_cache_lock_event_waits_error": limit_library_cache_lock_event_waits_error,
@@ -55,7 +57,9 @@ def read_configuration(file_path: str):
                   "limit_version_one_error": limit_version_one_error,
                   "limit_version_all_error": limit_version_all_error,
 
-                  "limit_exceptions_events_ratio_error": limit_exceptions_events_ratio_error
+                  "limit_exceptions_events_ratio_error": limit_exceptions_events_ratio_error,
+
+                  "limit_cpu_error": limit_cpu_error
                   }
 
     # Read SQL Ids to track

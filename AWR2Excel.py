@@ -1,9 +1,11 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import glob
-import argparse
+# import argparse
 import logging
 from pathlib import Path
+
+import modules.arguments as arguments
 from modules.constants import awr_sections
 from modules.constants import summary_section_key
 from modules.constants import checks_section_key
@@ -14,6 +16,7 @@ import modules.extract_data as extract_data
 import modules.sanity_checks as sanity_checks
 import modules.excel_tabs as excel_tabs
 import modules.track_elements as track_elements
+import modules.aggregations as aggregations
 
 
 def main():
@@ -23,12 +26,8 @@ def main():
         version = '1.0'
         version_description = 'AWR2Excel - Oracle AWR to Excel utility {}'.format(version)
 
-        parser = argparse.ArgumentParser(description=version_description)
-        parser.add_argument('-files', help='Comma-delimited list of HTML AWR files', default='')
-        parser.add_argument('-config', help='Path to configuration file', default='AWR2Excel.ini')
-
-        # If parse fail will show help
-        args = parser.parse_args()
+        # Process arguments
+        args = arguments.process_arguments(version_description)
 
         if args.files == '':
             print('You need to pass the AWR HTML file name.')
@@ -38,7 +37,7 @@ def main():
         # Read configuration
         try:
             config_path = args.config
-            print (f"config path {config_path}")
+            print(f"config path {config_path}")
             configuration.read_configuration(config_path)
         except OSError as err:
             print(f"OS error:", err)
@@ -92,21 +91,39 @@ def main():
                 # begin_date_time = sanity_checks.at("beginDateTime", "Value", summary_df)
 
                 # Append tracked SQLs section to report
-                tracked_sql_ids_df = pd.DataFrame.from_dict(track_elements.get_tracked_sql_ids(), orient="index",
+                complete_track_sql_ids = {}
+                found_sql_ids = track_elements.get_tracked_sql_ids()
+                for sql_id in configuration.track_sql_ids:
+                    value = found_sql_ids.get(sql_id)
+                    if value is None:
+                        executions = 0
+                        sql_statement = ""
+                    else:
+                        executions = value[0]
+                        sql_statement = value[1]
+                    complete_track_sql_ids[sql_id] = [executions, sql_statement]
+
+                tracked_sql_ids_df = pd.DataFrame.from_dict(complete_track_sql_ids, orient="index",
                                                             columns=["Executions", "SQL Text"])
                 tracked_sql_ids_df.reset_index(inplace=True)
                 tracked_sql_ids_df.rename(columns={'index': 'SQL Id'}, inplace = True)
-                report["tracked_sql_ids_section"] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
+                report[constants.tracked_sql_ids_section_key] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(
+                    index=range(0, constants.table_size))
 
                 # Append tracked Modules section to report
                 tracked_sql_ids_df = pd.DataFrame.from_dict(track_elements.get_tracked_sql_modules(), orient="index",
-                                                            columns=["Executions", "SQL Module", "SQL Text"])
+                                                            columns=["Executions", "SQL Text", "SQL Module"])
                 tracked_sql_ids_df.reset_index(inplace=True)
                 tracked_sql_ids_df.rename(columns={'index': 'SQL Id'}, inplace = True)
-                report["tracked_sql_modules_section"] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
+                report[constants.tracked_sql_modules_section_key] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(
+                    index=range(0, constants.table_size))
 
                 # aggregations
-                extract_data.aggregations()
+                # aggregations.aggregations()
+                # aggregations_df = pd.DataFrame.from_dict(aggregations.accum_aggregations, orient="index")
+                # aggregations_df.reset_index(inplace=True)
+                # aggregations_df.rename(columns={'Aggregation': 'Total'}, inplace=True)
+                # report[constants.aggregations_section_key] = aggregations_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
 
                 # Perform sanity checks of this report
                 sanity_checks.perform_sanity_checks(report, checks_section_key, configuration.thresholds)
@@ -120,6 +137,15 @@ def main():
     finally:
         # print(f"\nget_tracked_sql_modules - {track_elements.get_tracked_sql_modules()}")
         print('\nAWR2Excel.py Finished')
+
+
+# def process_arguments(version_description):
+#     parser = argparse.ArgumentParser(description=version_description)
+#     parser.add_argument('-files', help='Comma-delimited list of HTML AWR files', default='')
+#     parser.add_argument('-config', help='Path to configuration file', default='AWR2Excel.ini')
+#     # If parse fail will show help
+#     args = parser.parse_args()
+#     return args
 
 
 if __name__ == '__main__':

@@ -32,3 +32,6 @@ sql_indexes = ["SQL Id", "SQL Module", "SQL Text"]
 # To create to additional sections in the report
 summary_section_key = 'Summary'
 checks_section_key = 'Checks'
+tracked_sql_ids_section_key = "tracked_sql_ids"
+tracked_sql_modules_section_key = "tracked_sql_modules"
+aggregations_section_key = "aggregations"

@@ -3,6 +3,7 @@ import pandas as pd
 from modules.common import at
 from modules.constants import summary_section_key
 
+
 def perform_sanity_checks(report: dict, checks_section_key: str, thresholds: dict):
     check_results = {}
 
@@ -29,8 +30,11 @@ def perform_sanity_checks(report: dict, checks_section_key: str, thresholds: dic
             case 'This table displays wait class statistics ordered by total wait time':
                 wait_classes_by_total_wait_time(dataframe, thresholds, check_results)
 
-            case 'This table displays wait class statistics ordered by total wait time':
-                wait_classes_by_total_wait_time(dataframe, thresholds, check_results)
+            # case 'This table displays wait class statistics ordered by total wait time':
+            #     wait_classes_by_total_wait_time(dataframe, thresholds, check_results)
+
+            case 'Summary':
+                summary(dataframe, thresholds, check_results)
 
     checks_list = []
     results_list = []
@@ -232,9 +236,9 @@ def sql_ordered_by_cpu_time(dataframe, thresholds, check_results):
     return
 
 
-# def at(index: str, column: str, dataframe: pd.DataFrame) -> object:
-#     try:
-#         item = dataframe.at[index, column]
-#     except (KeyError, ValueError):
-#         item = 0
-#     return item
+def summary(dataframe, thresholds, check_results):
+    temp_df = dataframe.set_index("Parameter", inplace=False)
+    total_cpu = 100 - at("idleCpu", "Value", temp_df)
+    total_cpu_flag = total_cpu > thresholds["limit_cpu_error"]
+    check_results['total_cpu'] = {'result': total_cpu_flag, 'evidence': total_cpu}
+    return
