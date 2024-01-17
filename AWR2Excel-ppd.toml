@@ -25,6 +25,7 @@ limit_exceptions_events_ratio_error = 10
 events = ["7wcmwtk6ay1c9", "42578a4znzq41",  "cu8nfwfd711uc"]
 mailpieces = ["adxgsarcwdbdr", "cvq3d9nzdp5w7", "39zxtftut2dxs"]
 errors = ["47byg9a0mdfmx"]
+container = ["8b7y3ha8cqw9r"]
 
 [TRACKER.track_sql_modules]
 track_sql_modules = ["DBMS_SCHEDULER", "SQL Developer", "sqlplus"]
