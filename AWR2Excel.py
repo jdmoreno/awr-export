@@ -35,7 +35,6 @@ def main():
             print('Example: AWR2Excel.py -file /path/awrfile.html or AWR2Excel.py -file /path/*.html')
             return
 
-
         # Read configuration
         try:
             config_path = args.config
@@ -61,8 +60,6 @@ def main():
 
         reports: dict = {}
         for fn in filelist:
-            # files = glob.glob(fn)
-
             file_path = Path(fn)
             parent_path = file_path.parent
             file_name = file_path.name
@@ -133,11 +130,9 @@ def process_awr(file, reports):
     aggregations.aggregations()
     aggregations_df = pd.DataFrame.from_dict(aggregations.accum_aggregations, orient="index")
     aggregations_df.reset_index(inplace=True)
-    # print(f"{aggregations_df.columns}")
     aggregations_df.rename(columns={'index': 'Aggregation', 0: 'Total'}, inplace=True)
-    # print(f"{aggregations_df.columns}")
-    # print(f"{aggregations_df}")
-    report[constants.aggregations_section_key] = aggregations_df.iloc[0:constants.table_size].reindex(index=range(0, constants.table_size))
+    report[constants.aggregations_section_key] = aggregations_df.iloc[0:constants.table_size].reindex(
+        index=range(0, constants.table_size))
 
     # Perform sanity checks of this report
     sanity_checks.perform_sanity_checks(report, checks_section_key, configuration.thresholds)
@@ -145,15 +140,6 @@ def process_awr(file, reports):
     # Add the report to the list of reports
     begin_date_time = sanity_checks.at("beginDateTime", "Value", summary_df)
     reports[begin_date_time] = report
-
-
-# def process_arguments(version_description):
-#     parser = argparse.ArgumentParser(description=version_description)
-#     parser.add_argument('-files', help='Comma-delimited list of HTML AWR files', default='')
-#     parser.add_argument('-config', help='Path to configuration file', default='AWR2Excel.ini')
-#     # If parse fail will show help
-#     args = parser.parse_args()
-#     return args
 
 
 if __name__ == '__main__':

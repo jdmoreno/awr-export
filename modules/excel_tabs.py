@@ -84,22 +84,24 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     set_cell(reports=reports, key=key, section=constants.summary_section_key, index_name=index_name,
                              column_name=column_name, parameter=parameter, work_sheet=work_sheet, row=row,
                              column=column, number_format=number_format)
+
                 case "D":  # file
                     dataframe = get_dataframe(reports, key, constants.summary_section_key, "Parameter")
                     parameter = "beginDateTime"
                     value = common.at(parameter, "Value", dataframe)
                     work_sheet.cell(row=row, column=column, value=value)
                     work_sheet.cell(row=row, column=column).style = ns_yyyy_mm_dd_h_mm_ss
+
                 case "E":  # library_cache_lock_event_waits
                     index_name = "Check"
                     section = constants.checks_section_key
                     dataframe = get_dataframe(reports, key, section=section, index_name=index_name)
-                    # print(f"dataframe: \n{dataframe}")
 
                     parameter = "library_cache_lock_event_waits"
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "F":  # cursor_mutex_x_event_waits
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -109,6 +111,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "G":  # cursor_mutex_s_event_waits
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -118,6 +121,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "H":  # total_cpu
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -137,6 +141,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "J":  # version_all
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -146,6 +151,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "K":  # library_cache_mutex_x_event_waits
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -155,6 +161,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "L":  # cursor_pin_s_wait_on_x_event_waits
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -164,6 +171,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "M":  # execute_to_parse
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -173,6 +181,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
+
                 case "N":  # concurrency_db_time
                     index_name = "Check"
                     section = constants.checks_section_key
@@ -244,10 +253,10 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
     column = 2
     column = print_titles(titles, work_sheet, row=row, column=column)
 
-    # Print tracked sql ids
+    # Print titles - tracked sql ids
     column = print_tracked_sql_ids(configuration.track_sql_ids, work_sheet, row=row, column=column)
 
-    # Print aggregations
+    # Print titles - aggregations
     column = print_tracked_sql_ids(aggregations.accum_aggregations.keys(), work_sheet, row=row, column=column)
 
     row = 3  # Start at row 2
@@ -255,10 +264,6 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
     for row_tuple in df_sheets.itertuples(index=False):
         key = row_tuple[0]
         sheet = row_tuple[1]
-
-        # Print Tab name
-        # column = 2
-        # work_sheet.cell(row=row, column=column, value=sheet)
 
         # For each of the columns
         column = 2
@@ -288,6 +293,7 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
             work_sheet.cell(row=row, column=column, value=value)
             work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
             column += 1
+
         row += 1
 
 
@@ -478,7 +484,6 @@ def print_summary_defined_columns(sheet, column, key, reports, row, work_sheet):
             dataframe = get_dataframe(reports, key, constants.summary_section_key, "Parameter")
             parameter = "hostMemUsed_SGA_PGA"
             value = common.at(parameter, "Value", dataframe)
-            print(f"hostMemUsed_SGA_PGA: {value}")
 
             work_sheet.cell(row=row, column=column, value=value)
             work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
@@ -497,7 +502,7 @@ def set_cell(reports, key, section, index_name, column, column_name, number_form
 def get_dataframe(reports, key, section, index_name):
     report = reports[key]
     data_frame = report[section]
-    # print(f"summary_df: \n{summary_df} - \nindex: {summary_df.index.name}")
+
     if index_name != data_frame.index.name:
         data_frame.set_index(index_name, inplace=True)
     return data_frame
@@ -510,15 +515,20 @@ def print_titles(titles, work_sheet, row, column):
     return column
 
 
-def print_tracked_sql_ids(list, work_sheet, row, column):
+def print_tracked_sql_ids(items_list, work_sheet, row, column):
     # Print the titles in the list
-    for item in list:
+    for item in items_list:
         work_sheet.cell(row=row, column=column, value=item)
         column += 1
     return column
 
 
 def print_reports(reports: dict):
+    """
+    Create an Excel spreadsheet with summary and check tabs
+    If not summary argument create a tab per AWR
+    """
+
     print('Generating excel spreadsheet')
     args = arguments.get_args()
     list_keys = sorted(reports.keys())
@@ -526,6 +536,7 @@ def print_reports(reports: dict):
     wb = Workbook()
     sheet_counter = 0
     sheets = []
+
     # write one sheet per AWR
     for key in list_keys:
         # Create a tab per AWR file
@@ -552,8 +563,6 @@ def print_reports(reports: dict):
 
     # create checks sheet
     df_sheets = pandas.DataFrame(data={'keys': list_keys, 'sheets': sheets})
-
-    # create checks sheet
     create_sheet_checks(wb, df_sheets, reports)
 
     # create summary sheet
@@ -562,7 +571,7 @@ def print_reports(reports: dict):
     # convert datetime obj to string
     # write a file object along with .xlsx extension
     str_current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-    out_filename = str_current_datetime + "_AWR2Excel" + ".xlsx"
+    out_filename = str_current_datetime + " - " + str(list_keys[0].strftime("%Y-%m-%d")) + ".xlsx"
 
     args = arguments.get_args()
     output_path = Path(args.output)
