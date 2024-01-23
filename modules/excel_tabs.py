@@ -230,7 +230,8 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
         "library_cache_mutex_x_event_waits",
         "cursor_pin_s_wait_on_x_event_waits",
         "execute_to_parse",
-        "concurrency_db_time"
+        "concurrency_db_time",
+        "hostMemUsed_SGA_PGA"
     ]
 
     """
@@ -472,6 +473,16 @@ def print_summary_defined_columns(sheet, column, key, reports, row, work_sheet):
             set_cell(reports=reports, key=key, section=section, index_name=index_name,
                      column_name=column_name, parameter=parameter, work_sheet=work_sheet, row=row,
                      column=column, number_format=number_format)
+
+        case "V":  # endSessions
+            dataframe = get_dataframe(reports, key, constants.summary_section_key, "Parameter")
+            parameter = "hostMemUsed_SGA_PGA"
+            value = common.at(parameter, "Value", dataframe)
+            print(f"hostMemUsed_SGA_PGA: {value}")
+
+            work_sheet.cell(row=row, column=column, value=value)
+            work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
+
         case _:
             pass
 

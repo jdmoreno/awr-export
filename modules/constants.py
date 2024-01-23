@@ -23,7 +23,8 @@ awr_sections = {
     18: "This table displays top SQL by version counts",
     19: "This table displays top SQL by cluster wait time",
     20: "This table displays Foreground Wait Events and their wait statistics",
-    21: "This table displays instance efficiency percentages"
+    21: "This table displays instance efficiency percentages",
+    22: "This table displays memory statistics"
 }
 
 # To index SQL tables

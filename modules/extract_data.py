@@ -171,6 +171,14 @@ def process_section(section_index, soup, report):
                 report[awr_sections[section_index]] = pd.DataFrame(data={"Parameter": key_list, "Value": value_list})
 
             case 22:
+                host_mem_used = df.at[3, 'End']
+
+                df_summary = report[summary_section_key]
+                df_summary.loc[len(df_summary)] = {'Parameter': 'hostMemUsed_SGA_PGA', 'Value': host_mem_used}
+
+                # print(f"Memory Statistics - df - {df}")
+                # print(f"% Host Mem used for SGA+PGA: {Host_Mem_used}")
+
                 report[awr_sections[section_index]] = df.iloc[0:table_size].reindex(index=range(0, table_size))
 
             case _:
