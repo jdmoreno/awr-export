@@ -25,4 +25,4 @@ def get_args():
 def print_arguments():
     global args
     print(f"\nArguments:")
-    print(f"\targuments:        {args}")
+    print(f"\targuments: {args}")

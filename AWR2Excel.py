@@ -86,6 +86,7 @@ def process_awr(file, reports):
     finally:
         if file_stream is not None:
             file_stream.close()
+
     # Create report, summary section and add the AWR filename to the summary section
     report = {summary_section_key: pd.DataFrame(columns=['Parameter', 'Value'])}
     report[summary_section_key].loc[len(report[summary_section_key])] = {'Parameter': 'file',
@@ -93,13 +94,15 @@ def process_awr(file, reports):
     # clear tracked stuff
     track_elements.clear_tracked_sql_ids()
     track_elements.clear_tracked_sql_modules()
+
     # Extract and format the tables from the AWR file
     for section_index in range(0, len(awr_sections)):
         extract_data.process_section(section_index, soup, report)
+
     # add the report to the list of reports
     summary_df = report[summary_section_key].copy()
     summary_df.set_index("Parameter", inplace=True)
-    # begin_date_time = sanity_checks.at("beginDateTime", "Value", summary_df)
+
     # Append tracked SQLs section to report
     complete_track_sql_ids = {}
     found_sql_ids = track_elements.get_tracked_sql_ids()
@@ -118,6 +121,7 @@ def process_awr(file, reports):
     tracked_sql_ids_df.rename(columns={'index': 'SQL Id'}, inplace=True)
     report[constants.tracked_sql_ids_section_key] = tracked_sql_ids_df.iloc[0:constants.table_size].reindex(
         index=range(0, constants.table_size))
+
     # Append tracked Modules section to report
     tracked_sql_ids_df = pd.DataFrame.from_dict(track_elements.get_tracked_sql_modules(), orient="index",
                                                 columns=["Executions", "SQL Text", "SQL Module"])

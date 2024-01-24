@@ -6,7 +6,7 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils.cell import get_column_letter
-from openpyxl.utils.cell import column_index_from_string
+# from openpyxl.utils.cell import column_index_from_string
 from openpyxl.styles import NamedStyle
 from openpyxl.styles import PatternFill
 from openpyxl.styles import numbers
@@ -30,7 +30,6 @@ amberFill = PatternFill(start_color='FFCC00', end_color='FFCC00', fill_type='sol
 greenFill = PatternFill(start_color='11EE11', end_color='11EE11', fill_type='solid')
 
 
-# def create_sheet_checks(work_book: Workbook, tabs: list):
 def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: dict):
     """
     Create the checks tab
@@ -240,7 +239,8 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
         "cursor_pin_s_wait_on_x_event_waits",
         "execute_to_parse",
         "concurrency_db_time",
-        "hostMemUsed_SGA_PGA"
+        "hostMemUsed_SGA_PGA",
+        "endCursorsSessions"
     ]
 
     """
@@ -488,6 +488,16 @@ def print_summary_defined_columns(sheet, column, key, reports, row, work_sheet):
             work_sheet.cell(row=row, column=column, value=value)
             work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
 
+        case "W":  # endCursorsSessions
+            dataframe = get_dataframe(reports, key, constants.summary_section_key, "Parameter")
+            parameter = "endCursorsSessions"
+            value = common.at(parameter, "Value", dataframe)
+
+            # print(f"endCursorsSessions: {value}")
+
+            work_sheet.cell(row=row, column=column, value=value)
+            work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
+
         case _:
             pass
 
@@ -532,6 +542,9 @@ def print_reports(reports: dict):
     print('Generating excel spreadsheet')
     args = arguments.get_args()
     list_keys = sorted(reports.keys())
+
+    # Check AWR dates
+    # check_awr_completeness(list_keys)
 
     wb = Workbook()
     sheet_counter = 0
@@ -578,3 +591,28 @@ def print_reports(reports: dict):
     Path(output_path).mkdir(parents=True, exist_ok=True)
     wb.save(output_path / out_filename)
     print(f'Spreadsheet written at {output_path / out_filename}')
+
+
+# from dateutil.relativedelta import *
+# def check_awr_completeness(dates: list):
+#     # awr_frequency = "00:30:00"
+#     # duration_obj = datetime.strptime("00:30:00", '%H:%M:%S')
+#
+#     first_date = dates[0]
+#     last_date = dates[-1]
+#     iterator_date = first_date
+#
+#     while iterator_date <= last_date:
+#         print(f"date: {iterator_date} - {type(iterator_date)}")
+#         iterator_date += relativedelta(minutes=+30)
+#
+#         list_index = 0
+#         for counter in range(list_index, len(dates)):
+#             print(f"{dates[counter]}")
+#             # c = a - b
+#             print('Difference: ', counter - iterator_date)
+
+
+
+    # for date in dates:
+    #     print(f"date: {date}")

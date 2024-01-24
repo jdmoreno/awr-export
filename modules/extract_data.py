@@ -86,6 +86,12 @@ def process_section(section_index, soup, report):
                 db_time = common.str_to_float(df.at[3, 'Snap Time'])
                 df_summary.loc[len(df_summary)] = {'Parameter': 'dbTime', 'Value': db_time}
 
+                begin_cursors_sessions = df.at[0, 'Cursors/Session']
+                df_summary.loc[len(df_summary)] = {'Parameter': 'beginCursorsSessions', 'Value': begin_cursors_sessions}
+
+                end_cursors_sessions = df.at[1, 'Cursors/Session']
+                df_summary.loc[len(df_summary)] = {'Parameter': 'endCursorsSessions', 'Value': end_cursors_sessions}
+
             case 3:
                 df_summary = report[summary_section_key]
 
