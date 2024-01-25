@@ -43,7 +43,7 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
         "library_cache_lock_event_waits",
         "cursor_mutex_x_event_waits",
         "cursor_mutex_s_event_waits",
-        "total_cpu",
+        "total_used_cpu",
         "version_one",
         "version_all",
         "library_cache_mutex_x_event_waits",
@@ -121,12 +121,12 @@ def create_sheet_checks(work_book: Workbook, df_sheets: pd.DataFrame, reports: d
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
 
-                case "H":  # total_cpu
+                case "H":  # total_used_cpu
                     index_name = "Check"
                     section = constants.checks_section_key
                     dataframe = get_dataframe(reports, key, section=section, index_name=index_name)
 
-                    parameter = "total_cpu"
+                    parameter = "total_used_cpu"
                     column_name = "Result"
                     value = bool(common.at(parameter, column_name, dataframe))
                     work_sheet.cell(row=row, column=column, value=value)
@@ -228,7 +228,7 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
         "elapsedTime",
         "dbTime",
         "dbTime %",
-        "userCPU",
+        "total_used_cpu",
         "endSessions",
         "library_cache_lock_event_waits",
         "cursor_mutex_x_event_waits",
@@ -240,7 +240,8 @@ def create_sheet_summary(work_book: Workbook, df_sheets: pd.DataFrame, reports: 
         "execute_to_parse",
         "concurrency_db_time",
         "hostMemUsed_SGA_PGA",
-        "endCursorsSessions"
+        "endCursorsSessions",
+        "enq_TX_row_lock_contention"
     ]
 
     """
@@ -367,12 +368,16 @@ def print_summary_defined_columns(sheet, column, key, reports, row, work_sheet):
             work_sheet.cell(row=row, column=column, value=value)
             work_sheet.cell(row=row, column=column).number_format = "0.00"
 
-        case "K":  # userCPU
-            dataframe = get_dataframe(reports, key, constants.summary_section_key, "Parameter")
-            parameter = "userCPU"
-            value = common.at(parameter, "Value", dataframe)
-            work_sheet.cell(row=row, column=column, value=value)
-            work_sheet.cell(row=row, column=column).number_format = "0.00"
+        case "K":  # total_used_cpu
+            parameter = "total_used_cpu"
+            index_name = "Check"
+            column_name = "Evidence"
+            number_format = numbers.BUILTIN_FORMATS[3]
+            section = constants.checks_section_key
+
+            set_cell(reports=reports, key=key, section=section, index_name=index_name,
+                     column_name=column_name, parameter=parameter, work_sheet=work_sheet, row=row,
+                     column=column, number_format=number_format)
 
         case "L":  # endSessions
             dataframe = get_dataframe(reports, key, constants.summary_section_key, "Parameter")
@@ -493,10 +498,26 @@ def print_summary_defined_columns(sheet, column, key, reports, row, work_sheet):
             parameter = "endCursorsSessions"
             value = common.at(parameter, "Value", dataframe)
 
-            # print(f"endCursorsSessions: {value}")
-
             work_sheet.cell(row=row, column=column, value=value)
             work_sheet.cell(row=row, column=column).number_format = numbers.BUILTIN_FORMATS[3]
+
+        case "X":  # cursor_mutex_x_event_waits
+            index_name = "Event"
+
+            section_order = 20
+            section_index = constants.awr_sections[section_order]
+            dataframe = get_dataframe(reports, key, section_index, index_name)
+
+            column_name = "Total Wait Time (s)"
+            parameter = "enq: TX - row lock contention"
+            value = common.at(parameter, column_name, dataframe)
+            if value is None:
+                value = 0
+
+            number_format = numbers.BUILTIN_FORMATS[3]
+
+            work_sheet.cell(row=row, column=column, value=value)
+            work_sheet.cell(row=row, column=column).number_format = number_format
 
         case _:
             pass
@@ -539,80 +560,56 @@ def print_reports(reports: dict):
     If not summary argument create a tab per AWR
     """
 
-    print('Generating excel spreadsheet')
     args = arguments.get_args()
     list_keys = sorted(reports.keys())
 
-    # Check AWR dates
-    # check_awr_completeness(list_keys)
+    if len(list_keys) > 0:
+        print('Generating excel spreadsheet')
 
-    wb = Workbook()
-    sheet_counter = 0
-    sheets = []
+        wb = Workbook()
+        sheet_counter = 0
+        sheets = []
 
-    # write one sheet per AWR
-    for key in list_keys:
-        # Create a tab per AWR file
-        sheet_name = f"AWR2Excel_{sheet_counter}"
-        sheet_counter += 1
-        sheets.append(sheet_name)
+        # write one sheet per AWR
+        for key in list_keys:
+            # Create a tab per AWR file
+            sheet_name = f"AWR2Excel_{sheet_counter}"
+            sheet_counter += 1
+            sheets.append(sheet_name)
 
-        if args.summary:
-            pass
-        else:
-            print(f'Generating excel tab {sheet_name}')
-            ws = wb.create_sheet(sheet_name)
-            report = reports[key]
+            if args.summary:
+                pass
+            else:
+                print(f'Generating excel tab {sheet_name}')
+                ws = wb.create_sheet(sheet_name)
+                report = reports[key]
 
-            # Write the sections of an AWR
-            for section_key in report:
-                section_df = report[section_key]
-                ws.append([])
+                # Write the sections of an AWR
+                for section_key in report:
+                    section_df = report[section_key]
+                    ws.append([])
 
-                ws.append([section_key])
+                    ws.append([section_key])
 
-                for row in dataframe_to_rows(section_df, index=False, header=True):
-                    ws.append(row)
+                    for row in dataframe_to_rows(section_df, index=False, header=True):
+                        ws.append(row)
 
-    # create checks sheet
-    df_sheets = pandas.DataFrame(data={'keys': list_keys, 'sheets': sheets})
-    create_sheet_checks(wb, df_sheets, reports)
+        # create checks sheet
+        df_sheets = pandas.DataFrame(data={'keys': list_keys, 'sheets': sheets})
+        create_sheet_checks(wb, df_sheets, reports)
 
-    # create summary sheet
-    create_sheet_summary(wb, df_sheets, reports)
+        # create summary sheet
+        create_sheet_summary(wb, df_sheets, reports)
 
-    # convert datetime obj to string
-    # write a file object along with .xlsx extension
-    str_current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-    out_filename = str_current_datetime + " - " + str(list_keys[0].strftime("%Y-%m-%d")) + ".xlsx"
+        # convert datetime obj to string
+        # write a file object along with .xlsx extension
+        str_current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+        out_filename = str_current_datetime + " - " + str(list_keys[0].strftime("%Y-%m-%d")) + ".xlsx"
 
-    args = arguments.get_args()
-    output_path = Path(args.output)
-    Path(output_path).mkdir(parents=True, exist_ok=True)
-    wb.save(output_path / out_filename)
-    print(f'Spreadsheet written at {output_path / out_filename}')
-
-
-# from dateutil.relativedelta import *
-# def check_awr_completeness(dates: list):
-#     # awr_frequency = "00:30:00"
-#     # duration_obj = datetime.strptime("00:30:00", '%H:%M:%S')
-#
-#     first_date = dates[0]
-#     last_date = dates[-1]
-#     iterator_date = first_date
-#
-#     while iterator_date <= last_date:
-#         print(f"date: {iterator_date} - {type(iterator_date)}")
-#         iterator_date += relativedelta(minutes=+30)
-#
-#         list_index = 0
-#         for counter in range(list_index, len(dates)):
-#             print(f"{dates[counter]}")
-#             # c = a - b
-#             print('Difference: ', counter - iterator_date)
-
-
-
-    # for date in dates:
-    #     print(f"date: {date}")
+        args = arguments.get_args()
+        output_path = Path(args.output)
+        Path(output_path).mkdir(parents=True, exist_ok=True)
+        wb.save(output_path / out_filename)
+        print(f'Spreadsheet written at {output_path / out_filename}')
+    else:
+        print('No data to generate excel spreadsheet')

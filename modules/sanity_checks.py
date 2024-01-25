@@ -63,9 +63,6 @@ def wait_classes_by_total_wait_time(dataframe, thresholds, check_results):
 
     concurrency_db_time_flag = concurrency_db_time > limit_concurrency_db_time
 
-    # Print check results
-    # print(f"concurreency_db_time_flag: {concurrency_db_time_flag} - evidence: {concurrency_db_time}")
-
     # Update checklist
     check_results['concurrency_db_time'] = {'result': concurrency_db_time_flag, 'evidence': concurrency_db_time}
 
@@ -174,13 +171,6 @@ def top_10_foreground_events_by_total_wait_time(dataframe, thresholds, check_res
     cursor_pin_s_wait_on_x_event_waits_flag = cursor_pin_s_wait_on_x_event_waits > thresholds[
         "limit_cursor_pin_s_wait_on_x_event_waits_error"]
 
-    # Print check results
-    # print(f"library_cache_locks_event_waits_flag: {library_cache_locks_event_waits_flag} - evidence: {library_cache_lock_event_waits}")
-    # print(f"library_cache_mutex_x_event_waits_flag: {library_cache_mutex_x_event_waits_flag} - evidence: {library_cache_mutex_x_event_waits}")
-    # print(f"cursor_mutex_s_event_waits_flag: {cursor_mutex_s_event_waits_flag} - evidence: {cursor_mutex_s_event_waits}")
-    # print(f"cursor_mutex_x_event_waits_flag: {cursor_mutex_x_event_waits_flag} - evidence: {cursor_mutex_x_event_waits}")
-    # print(f"cursor_pin_s_wait_on_x_event_waits_flag: {cursor_pin_s_wait_on_x_event_waits_flag} - evidence: {cursor_pin_s_wait_on_x_event_waits}")
-
     # Update checklist
     check_results['library_cache_lock_event_waits'] = {'result': library_cache_locks_event_waits_flag,
                                                        'evidence': library_cache_lock_event_waits}
@@ -225,11 +215,6 @@ def sql_ordered_by_cpu_time(dataframe, thresholds, check_results):
     ratio_exceptions_events_flag = ratio_exceptions_events > thresholds[
         "limit_exceptions_events_ratio_error"]
 
-    # print(f"Events executions {events_inserts_executions}")
-    # print(f"Exceptions executions {exceptions_inserts_executions}")
-    # print(f"ratio_exceptions_events: {ratio_exceptions_events}")
-    # print(f"ratio_exceptions_events_flag: {ratio_exceptions_events_flag}")
-
     check_results['ratio_exceptions_events'] = {'result': ratio_exceptions_events_flag,
                                                 'evidence': exceptions_inserts_executions}
 
@@ -238,7 +223,7 @@ def sql_ordered_by_cpu_time(dataframe, thresholds, check_results):
 
 def summary(dataframe, thresholds, check_results):
     temp_df = dataframe.set_index("Parameter", inplace=False)
-    total_cpu = 100 - at("idleCpu", "Value", temp_df)
-    total_cpu_flag = total_cpu > thresholds["limit_cpu_error"]
-    check_results['total_cpu'] = {'result': total_cpu_flag, 'evidence': total_cpu}
+    total_used_cpu = 100 - at("idleCpu", "Value", temp_df)
+    total_used_cpu_flag = total_used_cpu > thresholds["limit_cpu_error"]
+    check_results['total_used_cpu'] = {'result': total_used_cpu_flag, 'evidence': total_used_cpu}
     return
